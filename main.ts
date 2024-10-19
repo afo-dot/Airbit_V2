@@ -75,16 +75,16 @@ function mainLoop () {
         airbit.calculateAngles()
         basic.pause(1)
         lostSignalCheck()
-        if (motorTesting == false) {
-            // The "magic" algorithm that stabilises the drone based on setpoint angle and actual angle, finding the difference and chanring motor speed to compensate.
+        // The "magic" algorithm that stabilises the drone based on setpoint angle and actual angle, finding the difference and chanring motor speed to compensate.
             airbit.stabilisePid()
-        }
+       
         // If upside down while armed, disable flying
-        if (Math.abs(imuRoll) > 90 && arm) {
-            stable = false
-        }
+       // if (Math.abs(imuRoll) > 90 && arm) {
+       //     stable = false
+        //}
         // Only start motors if armed, stable, motor controller and gyro is operating
-        if (arm && stable && (mcExists && gyroExists)) {
+        
+	if (arm && stable && (mcExists && gyroExists)) {
             if (throttle == 0) {
                 // Idle speed of motors
                 airbit.MotorSpeed(
@@ -104,32 +104,20 @@ function mainLoop () {
         } else {
             // Clear registers for error compensation algorithms, do not keep errors from past flight.
             airbit.cleanReg()
-            if (motorTesting) {
-                airbit.MotorSpeed(
-                motorA,
-                motorB,
-                motorC,
-                motorD
-                )
-            } else {
-                airbit.MotorSpeed(
-                0,
-                0,
-                0,
-                0
-                )
-            }
+           
         }
         cpuTime = input.runningTime() - startTime
         startTime = input.runningTime()
     }
 }
+
 input.onButtonPressed(Button.A, function () {
     mode += -1
     if (mode < 0) {
         mode = 6
     }
 })
+
 function radioSendData () {
     radio.sendValue("p", rollPitchP)
     radio.sendValue("i", rollPitchI)

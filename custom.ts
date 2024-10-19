@@ -539,6 +539,71 @@ namespace airbit {
     //% group='Control'
 
 
+    export function stabilisePidAFO() {
+
+        rollDiff = roll - imuRoll
+        pitchDiff = pitch - imuPitch      // Reversing the pitch
+       
+        yawDiff = yaw - imuYaw
+
+
+  let iRange = 5      //  Maximal error that will increase Roll and Pitch integral
+        let iLimit = 4      //  Maximal correcton that can be added by integral
+        let yawLimit = 50   //  Maximal yaw correction 
+       
+        if (throttle > 50) {    // Prevent windup before flight
+//integral
+            if (rollDiff > - iRange && rollDiff < iRange ){
+                rollIdiff += rollDiff
+            }
+            if (pitchDiff > - iRange && pitchDiff < iRange) {
+                pitchIdiff += pitchDiff
+            }
+
+        }
+
+
+        ///derivative
+        rollDdiff = rollDiff - lastRollDiff
+        
+        pitchDdiff = pitchDiff - lastPitchDiff
+        
+        yawDdiff = yawDiff - lastYawDiff
+
+        lastRollDiff = rollDiff
+        lastPitchDiff = pitchDiff
+        lastYawDiff = yawDiff
+
+      
+
+        let rollIcorrection = rollIdiff * rollPitchI
+        let pitchIcorrection = pitchIdiff * rollPitchI
+
+        rollIcorrection = Math.constrain(rollIcorrection, -iLimit, iLimit)     // Limit I (preventing it from growing out of proportions)
+        pitchIcorrection = Math.constrain(pitchIcorrection, -iLimit, iLimit)
+
+     
+        rollCorrection = rollDiff * rollPitchP + rollIcorrection + rollDdiff * rollPitchD
+        pitchCorrection = pitchDiff * rollPitchP + pitchIcorrection + pitchDdiff * rollPitchD
+        //yawCorrection = yawDiff * yawP 
+        yawCorrection = yawDiff * yawP + yawDdiff * yawD
+        yawCorrection = Math.constrain(yawCorrection, -yawLimit, yawLimit)
+        throttleScaled = throttle * 2.55
+
+        //tuningOut = rollIdiff * rollPitchI
+        //tuningOutA = yawDiff
+        //tuningOutB = rollIcorrection
+
+        // rollCorrection = 0
+        motorA = Math.round(throttleScaled + rollCorrection + pitchCorrection + yawCorrection)
+        motorB = Math.round(throttleScaled + rollCorrection - pitchCorrection - yawCorrection)
+        motorC = Math.round(throttleScaled - rollCorrection + pitchCorrection - yawCorrection)
+        motorD = Math.round(throttleScaled - rollCorrection - pitchCorrection + yawCorrection)
+        motorA = Math.constrain(motorA, 0, 255)
+        motorB = Math.constrain(motorB, 0, 255)
+        motorC = Math.constrain(motorC, 0, 255)
+        motorD = Math.constrain(motorD, 0, 255)
+    }
     export function stabilisePid() {
 
         rollDiff = roll - imuRoll

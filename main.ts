@@ -67,7 +67,9 @@ function screen () {
         }
     }
 }
-function mainLoop () {
+
+
+/*function mainLoop () {
     while (true) {
         // Read raw data from gyro and accelerometer
         airbit.IMU_sensorRead()
@@ -105,6 +107,49 @@ function mainLoop () {
             // Clear registers for error compensation algorithms, do not keep errors from past flight.
             airbit.cleanReg()
            
+        }
+        cpuTime = input.runningTime() - startTime
+        startTime = input.runningTime()
+    }
+}*/
+
+
+function mainLoop () {
+    while (true) {
+        // Read raw data from gyro and accelerometer
+        airbit.IMU_sensorRead()
+        // Find drone's absolute Roll, Pitch and Yaw angles with sensor fusion, gyro and accelerometer together.
+        airbit.calculateAngles()
+        basic.pause(1)
+        // The "magic" algorithm that stabilises the drone based on setpoint angle and actual angle, finding the difference and chanring motor speed to compensate.
+        airbit.stabilisePid()
+        // Only start motors if armed, stable, motor controller and gyro is operating
+        if (arm && stable && (mcExists && gyroExists)) {
+            if (throttle == 0) {
+                // Idle speed of motors
+                airbit.MotorSpeed(
+                5,
+                5,
+                5,
+                5
+                )
+            } else {
+                airbit.MotorSpeed(
+                motorA,
+                motorB,
+                motorC,
+                motorD
+                )
+            }
+        } else {
+            // Clear registers for error compensation algorithms, do not keep errors from past flight.
+            airbit.cleanReg()
+            airbit.MotorSpeed(
+            0,
+            0,
+            0,
+            0
+            )
         }
         cpuTime = input.runningTime() - startTime
         startTime = input.runningTime()
